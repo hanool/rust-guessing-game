@@ -1,6 +1,6 @@
 use crossterm::{
     event::{self, Event, KeyCode, KeyEvent, KeyEventKind},
-    execute, terminal,
+    execute, style, terminal,
 };
 use std::io;
 
@@ -12,11 +12,25 @@ where
 
     terminal::enable_raw_mode()?;
 
-    let title = include_str!("../assets/title.txt");
+    let title: &str = include_str!("../assets/title.txt");
 
     println!("{}", title);
     println!("Press 'q' to quit!");
 
+    loop {
+        match read_char()? {
+            'q' => {
+                println!("Goobye!");
+                break;
+            }
+            _ => {}
+        }
+    }
+
+    terminal::disable_raw_mode()
+}
+
+fn read_char() -> io::Result<char> {
     loop {
         if let Ok(Event::Key(KeyEvent {
             code: KeyCode::Char(c),
@@ -25,14 +39,9 @@ where
             state: _,
         })) = event::read()
         {
-            if c == 'q' {
-                println!("Goodbye, world!");
-                break;
-            }
+            return Ok(c);
         }
     }
-
-    terminal::disable_raw_mode()
 }
 
 fn main() -> std::io::Result<()> {
