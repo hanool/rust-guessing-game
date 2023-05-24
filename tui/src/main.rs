@@ -12,7 +12,9 @@ where
 
     terminal::enable_raw_mode()?;
 
-    println!("Hello, world!");
+    let title = include_str!("../assets/title.txt");
+
+    println!("{}", title);
     println!("Press 'q' to quit!");
 
     loop {
