@@ -38,19 +38,19 @@ where
 fn display_title() -> io::Result<()> {
     let width: usize = terminal::size().unwrap().0.into();
     let title: &str = include_str!("../assets/title.txt");
-    let title = if title.contains("\r\n") {
-        title.split("\r\n")
-    } else {
-        title.split("\n")
-    };
+    let title = title.split("\n");
 
     for row in title {
-        println!(
-            "{}",
-            row.pad_to_width_with_alignment(width, Alignment::Middle)
-                .stylize()
-                .bold()
-        );
+        let styled_line = row
+            .pad_to_width_with_alignment(width, Alignment::Middle)
+            .stylize()
+            .bold();
+
+        if row.ends_with("\r") {
+            println!("{}", styled_line);
+        } else {
+            print!("{}", styled_line);
+        }
     }
 
     println!(
