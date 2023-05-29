@@ -1,6 +1,6 @@
 use crossterm::{
     event::{self, Event, KeyCode, KeyEvent, KeyEventKind},
-    execute, style, terminal,
+    execute, style::{self, Stylize}, terminal,
 };
 use std::io;
 
@@ -12,10 +12,7 @@ where
 
     terminal::enable_raw_mode()?;
 
-    let title: &str = include_str!("../assets/title.txt");
-
-    println!("{}", title);
-    println!("Press 'q' to quit!");
+    display_title();
 
     loop {
         match read_char()? {
@@ -28,6 +25,18 @@ where
     }
 
     terminal::disable_raw_mode()
+}
+
+fn display_title() {
+
+    let title: &str = include_str!("../assets/title.txt");
+    let title = title.split("\n");
+
+    for row in title {
+        println!("{}", row.stylize().bold());
+    }
+
+    println!("{}", "Press Enter to start!".slow_blink());
 }
 
 fn read_char() -> io::Result<char> {
@@ -45,8 +54,6 @@ fn read_char() -> io::Result<char> {
 }
 
 fn main() -> std::io::Result<()> {
-    println!("Hello, world!");
-
     let mut stdout = io::stdout();
     run(&mut stdout)
 }
