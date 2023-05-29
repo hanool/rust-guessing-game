@@ -3,6 +3,7 @@ use crossterm::{
     execute, style::{self, Stylize}, terminal,
 };
 use std::io;
+use pad::{PadStr, Alignment};
 
 fn run<W>(w: &mut W) -> io::Result<()>
 where
@@ -12,7 +13,7 @@ where
 
     terminal::enable_raw_mode()?;
 
-    display_title();
+    display_title()?;
 
     loop {
         match read_char()? {
@@ -27,16 +28,25 @@ where
     terminal::disable_raw_mode()
 }
 
-fn display_title() {
+fn display_title() -> io::Result<()>{
 
+    let size = terminal::size()?;
+    let width: usize = size.0.into();
     let title: &str = include_str!("../assets/title.txt");
     let title = title.split("\n");
 
     for row in title {
-        println!("{}", row.stylize().bold());
+        println!("{}", row
+             .pad_to_width_with_alignment(width, Alignment::Middle)
+             .stylize()
+             .bold());
     }
 
-    println!("{}", "Press Enter to start!".slow_blink());
+    println!("{}", "Press Enter to start!"
+             .pad_to_width_with_alignment(width, Alignment::Middle)
+             .slow_blink());
+
+    Ok(())
 }
 
 fn read_char() -> io::Result<char> {
