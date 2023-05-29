@@ -3,9 +3,11 @@ use crossterm::{
     event::{self, Event, KeyCode, KeyEvent, KeyEventKind},
     execute,
     style::Stylize,
-    terminal,
+    terminal::{self, Clear, ClearType},
 };
 use pad::{Alignment, PadStr};
+use rand::{thread_rng, Rng};
+use std::cmp::Ordering;
 use std::io;
 
 fn run<W>(w: &mut W) -> io::Result<()>
@@ -17,15 +19,30 @@ where
     terminal::enable_raw_mode()?;
     execute!(w, Hide, MoveTo(0, 0))?;
 
-    display_title()?;
+    let mut is_game_over = false;
 
-    loop {
-        match read_char()? {
-            'q' => {
-                println!("Goobye!");
-                break;
+    while !is_game_over {
+        display_title()?;
+
+        loop {
+            match process_keypress()? {
+                KeyCode::Char(c) => match c {
+                    'q' => {
+                        println!("Goodbye!");
+                        is_game_over = true;
+                        break;
+                    }
+                    _ => {}
+                },
+                KeyCode::Enter => {
+                    match process_game(w) {
+                        Ok(_) => is_game_over = false,
+                        Err(_) => is_game_over = true,
+                    }
+                    break;
+                }
+                _ => {}
             }
-            _ => {}
         }
     }
 
@@ -63,20 +80,83 @@ fn display_title() -> io::Result<()> {
     Ok(())
 }
 
-fn read_char() -> io::Result<char> {
+fn process_keypress() -> io::Result<KeyCode> {
     loop {
-        if let Ok(Event::Key(KeyEvent {
-            code: KeyCode::Char(c),
-            kind: KeyEventKind::Press,
-            modifiers: _,
-            state: _,
-        })) = event::read()
-        {
-            return Ok(c);
+        match event::read() {
+            Ok(e) => match e {
+                Event::Key(KeyEvent {
+                    code: k,
+                    kind: KeyEventKind::Press,
+                    modifiers: _,
+                    state: _,
+                }) => {
+                    return Ok(k);
+                }
+                _ => {}
+            },
+            Err(_) => {}
         }
     }
 }
 
+fn process_game<W>(w: &mut W) -> io::Result<()>
+where
+    W: io::Write,
+{
+    execute!(w, Clear(ClearType::All), MoveTo(0, 0))?;
+
+    let mut rng = thread_rng();
+    let answer: i32 = rng.gen_range(0..101);
+
+    println!("the number is {}", answer);
+
+    loop {
+        println!(
+            "{}",
+            "Guess the Number!"
+                .pad_to_width_with_alignment(terminal::size().unwrap().0.into(), Alignment::Middle)
+        );
+        let mut guessed_number = String::new();
+
+        loop {
+            let user_input = process_keypress();
+
+            match user_input {
+                Ok(KeyCode::Char(c)) => match c.to_digit(10) {
+                    Some(i) => {
+                        print!("{}", i);
+                        guessed_number.push(c);
+                    }
+                    None => {}
+                },
+                Ok(KeyCode::Enter) => {
+                    break;
+                }
+                _ => {}
+            }
+        }
+
+        let guessed_number = match guessed_number.parse::<i32>() {
+            Ok(num) => num,
+            Err(_) => {
+                println!("{}", "Please input valid number".red());
+                continue;
+            }
+        };
+
+        match guessed_number.cmp(&answer) {
+            Ordering::Less => println!("{}", "Too Small!".yellow().bold()),
+            Ordering::Greater => println!("{}", "Too Big!".yellow().bold()),
+            Ordering::Equal => {
+                println!("{}", "You Win!".green().bold());
+                break;
+            }
+        }
+    }
+    execute!(w, Clear(ClearType::All), MoveTo(0, 0))?;
+
+    Ok(())
+}
 fn main() -> std::io::Result<()> {
     let mut stdout = io::stdout();
     run(&mut stdout)
