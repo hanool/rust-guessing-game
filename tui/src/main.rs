@@ -1,5 +1,5 @@
 use crossterm::{
-    cursor::{Hide, MoveTo, Show},
+    cursor::{Hide, MoveTo, MoveToColumn, Show},
     event::{self, Event, KeyCode, KeyEvent, KeyEventKind},
     execute,
     style::Stylize,
@@ -114,6 +114,7 @@ where
     let answer: i32 = rng.gen_range(0..101);
 
     println!("the number is {}", answer);
+    execute!(w, MoveToColumn(0))?;
 
     loop {
         println!(
@@ -121,6 +122,7 @@ where
             "Guess the Number!"
                 .pad_to_width_with_alignment(terminal::size().unwrap().0.into(), Alignment::Middle)
         );
+        execute!(w, MoveToColumn(0))?;
         let mut guessed_number = String::new();
 
         loop {
@@ -139,6 +141,7 @@ where
                 Ok(KeyCode::Enter) => {
                     print!("\n");
                     w.flush()?;
+                    execute!(w, MoveToColumn(0))?;
                     break;
                 }
                 _ => {}
@@ -149,6 +152,7 @@ where
             Ok(num) => num,
             Err(_) => {
                 println!("{}", "Please input valid number".red());
+                execute!(w, MoveToColumn(0))?;
                 continue;
             }
         };
@@ -158,15 +162,17 @@ where
             Ordering::Greater => println!("{}", "Too Big!".yellow().bold()),
             Ordering::Equal => {
                 println!("{}", "You Win!".green().bold());
-                thread::sleep(Duration::from_secs(3));
+                thread::sleep(Duration::from_secs(1));
                 break;
             }
         }
+        execute!(w, MoveToColumn(0))?;
     }
     execute!(w, Clear(ClearType::All), MoveTo(0, 0))?;
 
     Ok(())
 }
+
 fn main() -> std::io::Result<()> {
     let mut stdout = io::stdout();
     run(&mut stdout)
