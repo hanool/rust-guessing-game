@@ -7,8 +7,9 @@ use crossterm::{
 };
 use pad::{Alignment, PadStr};
 use rand::{thread_rng, Rng};
-use std::cmp::Ordering;
 use std::io;
+use std::thread;
+use std::{cmp::Ordering, time::Duration};
 
 fn run<W>(w: &mut W) -> io::Result<()>
 where
@@ -72,11 +73,15 @@ fn display_title() -> io::Result<()> {
 
     println!(
         "{}",
-        "Press 'q' to quit"
+        "Press Enter to start"
             .pad_to_width_with_alignment(width, Alignment::Middle)
             .slow_blink()
     );
 
+    println!(
+        "{}",
+        "or 'q' to quit".pad_to_width_with_alignment(width, Alignment::Middle)
+    );
     Ok(())
 }
 
@@ -119,17 +124,21 @@ where
         let mut guessed_number = String::new();
 
         loop {
-            let user_input = process_keypress();
+            match process_keypress() {
+                Ok(KeyCode::Char(c)) => {
+                    print!("{}", c);
+                    w.flush()?;
 
-            match user_input {
-                Ok(KeyCode::Char(c)) => match c.to_digit(10) {
-                    Some(i) => {
-                        print!("{}", i);
-                        guessed_number.push(c);
+                    match c.to_digit(10) {
+                        Some(_) => {
+                            guessed_number.push(c);
+                        }
+                        None => {}
                     }
-                    None => {}
-                },
+                }
                 Ok(KeyCode::Enter) => {
+                    print!("\n");
+                    w.flush()?;
                     break;
                 }
                 _ => {}
@@ -149,6 +158,7 @@ where
             Ordering::Greater => println!("{}", "Too Big!".yellow().bold()),
             Ordering::Equal => {
                 println!("{}", "You Win!".green().bold());
+                thread::sleep(Duration::from_secs(3));
                 break;
             }
         }
