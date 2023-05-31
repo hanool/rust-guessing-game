@@ -79,14 +79,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "guessing-game"
-version = "0.1.0"
-dependencies = [
- "colored",
- "rand",
-]
-
-[[package]]
 name = "hermit-abi"
 version = "0.1.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"

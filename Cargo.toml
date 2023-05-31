@@ -1,4 +1,4 @@
 [workspace]
-members = ["guessing-game", "tui"]
+members = ["tui"]
 
 
