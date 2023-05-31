@@ -1,4 +1,10 @@
-[workspace]
-members = ["tui"]
+[package]
+name = "rust-guessing-game"
+version = "0.1.0"
+edition = "2021"
 
-
+[dependencies]
+crossterm = "0.26.1"
+pad = "0.1.6"
+rand = "0.8.4"
+colored = "2"
